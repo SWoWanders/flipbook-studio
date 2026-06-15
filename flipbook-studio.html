@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flipbook Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --paper: #f5f0e8;
+  --paper-dark: #ede6d6;
+  --paper-lines: #d4c9b0;
+  --kraft: #8b6f47;
+  --kraft-dark: #6b5237;
+  --graphite: #3a3530;
+  --graphite-light: #5a5550;
+  --ink: #1a1510;
+  --accent: #c0392b;
+  --bg: #2c2420;
+  --panel: #1e1a16;
+  --border: #4a3f35;
+  --blue-pencil: #6ab0d4;
+  --red-pencil: #d45a5a;
+  --black-pencil: #2a2520;
+}
+body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--paper); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; user-select: none; }
+
+/* HEADER */
+#header { background: var(--panel); border-bottom: 2px solid var(--kraft); padding: 6px 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; z-index: 100; flex-wrap: nowrap; }
+#logo { font-family: 'Kalam', cursive; font-size: 16px; font-weight: 700; color: var(--paper); white-space: nowrap; flex-shrink: 0; }
+#logo span { color: var(--accent); }
+.header-sep { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+#dept-switcher { display: flex; gap: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px; flex-shrink: 0; }
+.dept-btn { font-family: 'Kalam', cursive; font-size: 12px; padding: 3px 10px; border: none; border-radius: 3px; cursor: pointer; background: none; color: var(--paper-lines); transition: all 0.15s; white-space: nowrap; }
+.dept-btn.active { background: var(--kraft); color: var(--paper); }
+#header-right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+#fps-display { font-size: 10px; color: var(--kraft); }
+.hbtn { background: none; border: 1px solid var(--border); color: var(--paper-lines); font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 4px 8px; border-radius: 3px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.hbtn:hover, .hbtn:active { border-color: var(--kraft); color: var(--paper); background: rgba(139,111,71,0.2); }
+select.hbtn { appearance: none; -webkit-appearance: none; }
+
+/* MAIN */
+#main { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+/* LEFT TOOLBAR */
+#toolbar { width: 56px; background: var(--panel); border-right: 2px solid var(--kraft-dark); display: flex; flex-direction: column; align-items: center; padding: 6px 4px; gap: 3px; flex-shrink: 0; overflow-y: auto; overflow-x: hidden; }
+#toolbar::-webkit-scrollbar { display: none; }
+.tool-btn { width: 44px; height: 44px; background: none; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; position: relative; flex-shrink: 0; }
+.tool-btn:hover, .tool-btn:active { border-color: var(--kraft); background: rgba(139,111,71,0.2); }
+.tool-btn.active { border-color: var(--accent); background: rgba(192,57,43,0.2); }
+.tool-label { font-size: 6px; color: var(--graphite-light); font-family: 'JetBrains Mono'; margin-top: 1px; text-align: center; line-height: 1; }
+.tool-sep { width: 36px; height: 1px; background: var(--border); margin: 2px 0; flex-shrink: 0; }
+
+/* PENCIL COLOUR DOTS */
+.pencil-color-btn { width: 44px; height: 36px; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; transition: all 0.15s; flex-shrink: 0; }
+.pencil-color-btn:hover, .pencil-color-btn:active { border-color: var(--kraft); background: rgba(139,111,71,0.2); }
+.pencil-color-btn.active { border-color: var(--accent); background: rgba(192,57,43,0.15); }
+.pencil-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+.pencil-dot-label { font-size: 6px; color: var(--graphite-light); font-family: 'JetBrains Mono'; }
+
+/* STEPPER controls (replaces sliders) */
+.stepper-wrap { width: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+.stepper-label { font-size: 7px; color: var(--kraft); font-family: 'JetBrains Mono'; text-align: center; }
+.stepper-val { font-size: 10px; color: var(--paper); font-family: 'JetBrains Mono'; text-align: center; min-width: 24px; }
+.stepper-row { display: flex; align-items: center; gap: 1px; }
+.stepper-btn { width: 20px; height: 20px; background: var(--bg); border: 1px solid var(--border); color: var(--paper-lines); font-size: 12px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.12s; }
+.stepper-btn:hover, .stepper-btn:active { background: var(--kraft-dark); border-color: var(--kraft); color: var(--paper); }
+
+/* CANVAS AREA */
+#canvas-wrap { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--bg); position: relative; overflow: hidden; min-width: 0; }
+#canvas-container { position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 2px var(--kraft-dark); }
+#canvas-container::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 10; opacity: 0.03; background-image: repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(0,0,0,0.4) 23px, rgba(0,0,0,0.4) 24px); }
+canvas { display: block; position: absolute; top: 0; left: 0; touch-action: none; }
+#canvas-bg    { z-index: 1; background: var(--paper); }
+#canvas-roto  { z-index: 2; pointer-events: none; }
+#canvas-onion { z-index: 3; pointer-events: none; opacity: 0.3; }
+#canvas-draw  { z-index: 4; cursor: crosshair; }
+#canvas-ui    { z-index: 5; pointer-events: none; }
+
+/* RIGHT PANEL */
+#right-panel { width: 190px; background: var(--panel); border-left: 2px solid var(--kraft-dark); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; overflow-x: hidden; }
+#right-panel::-webkit-scrollbar { width: 3px; }
+#right-panel::-webkit-scrollbar-thumb { background: var(--border); }
+.rpanel-section { border-bottom: 1px solid var(--border); padding: 8px; }
+.rpanel-title { font-family: 'Kalam', cursive; font-size: 11px; color: var(--kraft); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+.rpanel-title button { font-size: 9px; background: none; border: 1px solid var(--border); color: var(--paper-lines); padding: 2px 5px; border-radius: 2px; cursor: pointer; font-family: 'JetBrains Mono'; }
+.rpanel-title button:hover { border-color: var(--kraft); color: var(--paper); }
+
+/* IMPORT BUTTONS — prominent on mobile */
+.import-btn { width: 100%; padding: 10px 6px; background: var(--kraft-dark); border: 1px solid var(--kraft); color: var(--paper); font-family: 'Kalam', cursive; font-size: 13px; border-radius: 6px; cursor: pointer; margin-bottom: 6px; transition: all 0.15s; text-align: center; display: block; }
+.import-btn:hover, .import-btn:active { background: var(--kraft); }
+
+/* LAYERS */
+.layer-row { display: flex; align-items: center; gap: 5px; padding: 5px 4px; border-radius: 3px; cursor: pointer; transition: background 0.1s; font-size: 10px; }
+.layer-row:hover { background: rgba(139,111,71,0.15); }
+.layer-row.active { background: rgba(139,111,71,0.3); }
+.layer-eye { font-size: 12px; cursor: pointer; opacity: 0.4; flex-shrink: 0; }
+.layer-eye.on { opacity: 1; }
+.layer-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.layer-name { flex: 1; font-size: 10px; }
+
+/* COLOR PALETTE */
+#palette-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; margin-bottom: 6px; }
+.swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+.swatch:hover, .swatch:active { transform: scale(1.15); }
+.swatch.active { border-color: white; }
+#color-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+#current-color { width: 36px; height: 36px; border-radius: 5px; border: 2px solid var(--paper-lines); cursor: pointer; flex-shrink: 0; }
+#color-picker { display: none; }
+#color-hex { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--paper); font-family: 'JetBrains Mono'; font-size: 10px; padding: 4px 5px; border-radius: 3px; width: 0; }
+
+/* ONION SKIN */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 10px; color: var(--paper-lines); }
+.toggle { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.toggle.on { background: var(--kraft); }
+.toggle::after { content: ''; position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+.toggle.on::after { left: 19px; }
+.onion-stepper { display: flex; align-items: center; gap: 4px; }
+.onion-stepper button { width: 22px; height: 22px; background: var(--bg); border: 1px solid var(--border); color: var(--paper-lines); font-size: 14px; border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.onion-stepper button:active { background: var(--kraft-dark); }
+.onion-stepper span { font-size: 11px; color: var(--paper); min-width: 16px; text-align: center; }
+
+/* ROTO OPACITY — stepper style */
+.roto-opacity-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 10px; color: var(--paper-lines); }
+
+/* EXPORT */
+.export-btn { width: 100%; padding: 7px; background: var(--kraft-dark); border: 1px solid var(--kraft); color: var(--paper); font-family: 'Kalam', cursive; font-size: 12px; border-radius: 4px; cursor: pointer; margin-bottom: 4px; transition: all 0.15s; }
+.export-btn:hover, .export-btn:active { background: var(--kraft); }
+
+/* BOTTOM PANEL */
+#bottom-panel { height: 160px; background: var(--panel); border-top: 2px solid var(--kraft-dark); display: flex; flex-direction: column; flex-shrink: 0; }
+#timeline-header { height: 32px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 6px; gap: 5px; overflow-x: auto; }
+#timeline-header::-webkit-scrollbar { display: none; }
+.play-btn { width: 28px; height: 28px; background: none; border: 1px solid var(--kraft); border-radius: 4px; color: var(--paper); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.play-btn:hover, .play-btn:active { background: var(--kraft); }
+.play-btn.playing { border-color: var(--accent); color: var(--accent); }
+#frame-counter { font-size: 11px; color: var(--kraft); min-width: 52px; font-family: 'JetBrains Mono'; flex-shrink: 0; }
+.tl-btn { font-size: 10px; background: none; border: 1px solid var(--border); color: var(--paper-lines); padding: 3px 7px; border-radius: 3px; cursor: pointer; font-family: 'JetBrains Mono'; flex-shrink: 0; white-space: nowrap; }
+.tl-btn:hover, .tl-btn:active { border-color: var(--kraft); color: var(--paper); }
+#fps-select { background: var(--bg); border: 1px solid var(--border); color: var(--paper-lines); font-family: 'JetBrains Mono'; font-size: 10px; padding: 3px 4px; border-radius: 3px; flex-shrink: 0; }
+
+/* DOPE SHEET */
+#dope-sheet { flex: 1; overflow: hidden; display: flex; min-height: 0; }
+#layer-labels { width: 90px; flex-shrink: 0; border-right: 1px solid var(--border); overflow: hidden; }
+.ds-layer-label { height: 24px; display: flex; align-items: center; padding: 0 6px; font-size: 8px; color: var(--paper-lines); border-bottom: 1px solid var(--border); gap: 4px; }
+.ds-layer-label:first-child { height: 18px; border-bottom: 1px solid var(--border); }
+.ds-layer-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+#timeline-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; }
+#timeline-scroll::-webkit-scrollbar { height: 3px; }
+#timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+#timeline-inner { position: relative; min-width: 100%; }
+#frame-ruler { height: 18px; display: flex; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+.frame-tick { width: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 7px; color: var(--graphite-light); border-right: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.frame-tick:hover { background: rgba(139,111,71,0.2); }
+.frame-tick.current { background: rgba(192,57,43,0.3); color: var(--accent); }
+#dope-rows { display: flex; flex-direction: column; }
+.dope-row { height: 24px; display: flex; border-bottom: 1px solid var(--border); }
+.dope-cell { width: 22px; flex-shrink: 0; border-right: 1px solid rgba(74,63,53,0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.1s; }
+.dope-cell:hover { background: rgba(139,111,71,0.2); }
+.dope-cell.has-key::after { content: ''; width: 10px; height: 10px; background: var(--kraft); border-radius: 2px; transform: rotate(45deg); }
+.dope-cell.current { background: rgba(192,57,43,0.12); }
+.dope-cell.current.has-key::after { background: var(--accent); }
+
+/* WAVEFORM */
+#waveform-row { height: 22px; border-top: 1px solid var(--kraft-dark); display: flex; background: rgba(0,0,0,0.3); flex-shrink: 0; }
+#waveform-label { width: 90px; flex-shrink: 0; display: flex; align-items: center; padding: 0 6px; font-size: 8px; color: var(--kraft); border-right: 1px solid var(--border); }
+#waveform-canvas-wrap { flex: 1; overflow: hidden; }
+#waveform-canvas { display: block; }
+
+/* OVERLAYS */
+#drop-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 1000; align-items: center; justify-content: center; font-family: 'Kalam', cursive; font-size: 22px; color: var(--paper); border: 4px dashed var(--kraft); flex-direction: column; gap: 8px; }
+#drop-overlay.show { display: flex; }
+#toast { position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%); background: var(--graphite); color: var(--paper); padding: 7px 16px; border-radius: 4px; font-size: 11px; border: 1px solid var(--kraft); opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 500; white-space: nowrap; }
+#toast.show { opacity: 1; }
+#load-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; transition: width 0.3s; z-index: 2000; }
+
+/* FILL cursor */
+body.fill-mode #canvas-draw { cursor: cell; }
+
+/* MOBILE */
+@media (max-width: 640px) {
+  #right-panel { width: 150px; }
+  #toolbar { width: 48px; }
+  .tool-btn { width: 40px; height: 40px; font-size: 16px; }
+  .pencil-color-btn { width: 40px; }
+  #bottom-panel { height: 130px; }
+}
+@media (max-width: 480px) {
+  /* Right panel becomes a slide-in drawer */
+  #right-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: 220px;
+    z-index: 300;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    border-left: 2px solid var(--kraft);
+    overflow-y: auto;
+  }
+  #right-panel.open { transform: translateX(0); }
+  #panel-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 299;
+  }
+  #panel-backdrop.show { display: block; }
+}
+
+/* IMPORT SHEET — always available, slides up from bottom */
+#import-sheet {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--panel);
+  border-top: 2px solid var(--kraft);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px 32px;
+  z-index: 400;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+#import-sheet.open { transform: translateY(0); display: block; }
+#import-sheet-title {
+  font-family: 'Kalam', cursive;
+  font-size: 16px;
+  color: var(--kraft);
+  text-align: center;
+  margin-bottom: 14px;
+  position: relative;
+}
+#import-sheet-close {
+  position: absolute; right: 0; top: -2px;
+  background: none; border: 1px solid var(--border);
+  color: var(--paper-lines); font-size: 14px;
+  width: 28px; height: 28px; border-radius: 4px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.sheet-import-btn {
+  width: 100%; padding: 14px 10px;
+  background: var(--kraft-dark);
+  border: 1px solid var(--kraft);
+  color: var(--paper);
+  font-family: 'Kalam', cursive;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all 0.15s;
+  text-align: center;
+  display: block;
+}
+.sheet-import-btn:active { background: var(--kraft); }
+#sheet-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 399;
+}
+#sheet-backdrop.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="load-bar"></div>
+<div id="toast"></div>
+<div id="panel-backdrop"></div>
+<div id="sheet-backdrop"></div>
+
+<!-- IMPORT SHEET — always accessible on mobile -->
+<div id="import-sheet">
+  <div id="import-sheet-title">
+    Import
+    <button id="import-sheet-close">✕</button>
+  </div>
+  <button class="sheet-import-btn" id="sheet-btn-video">📽 Video — Rotoscope</button>
+  <button class="sheet-import-btn" id="sheet-btn-image">🖼 Background Image</button>
+  <button class="sheet-import-btn" id="sheet-btn-audio">🎵 Audio / Dialogue</button>
+</div>
+
+<div id="drop-overlay">
+  <div>📂</div>
+  <div>Drop video, image, or audio</div>
+</div>
+
+<input type="file" id="file-video" accept="video/*" style="display:none">
+<input type="file" id="file-image" accept="image/*" style="display:none">
+<input type="file" id="file-audio" accept="audio/*" style="display:none">
+<input type="color" id="color-picker">
+
+<!-- HEADER -->
+<div id="header">
+  <div id="logo">Flip<span>book</span></div>
+  <div class="header-sep"></div>
+  <div id="dept-switcher">
+    <button class="dept-btn active" data-dept="rough">✏️ Rough</button>
+    <button class="dept-btn" data-dept="ink">🖊️ Ink</button>
+    <button class="dept-btn" data-dept="paint">🪣 Paint</button>
+  </div>
+  <div id="header-right">
+    <button class="hbtn" id="btn-import-sheet" title="Import video / image / audio">📂 Import</button>
+    <button class="hbtn" id="btn-panel-toggle" title="Tools & colours">⚙️</button>
+    <select class="hbtn" id="ar-select" title="Aspect Ratio">
+      <option value="16:9">16∶9</option>
+      <option value="9:16">9∶16</option>
+      <option value="1:1">1∶1</option>
+      <option value="4:3">4∶3</option>
+      <option value="2.39:1">Scope</option>
+    </select>
+    <select class="hbtn" id="fps-select">
+      <option value="8">8 fps</option>
+      <option value="12">12 fps</option>
+      <option value="24" selected>24 fps</option>
+    </select>
+    <span id="fps-display" style="display:none">24fps</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- LEFT TOOLBAR -->
+  <div id="toolbar">
+
+    <!-- ROUGH DEPT: pencil colour modes -->
+    <div id="rough-pencils">
+      <div class="rpanel-title" style="font-size:7px;color:var(--kraft);text-align:center;letter-spacing:0;padding:2px 0;margin-bottom:3px">PENCIL</div>
+      <button class="pencil-color-btn active" data-pencil="blue" title="Light Blue — underdrawing">
+        <div class="pencil-dot" style="background:var(--blue-pencil)"></div>
+        <span class="pencil-dot-label">BLUE</span>
+      </button>
+      <button class="pencil-color-btn" data-pencil="red" title="Red — corrections & notes">
+        <div class="pencil-dot" style="background:var(--red-pencil)"></div>
+        <span class="pencil-dot-label">RED</span>
+      </button>
+      <button class="pencil-color-btn" data-pencil="black" title="Black — tight rough">
+        <div class="pencil-dot" style="background:#444"></div>
+        <span class="pencil-dot-label">BLACK</span>
+      </button>
+      <div class="tool-sep"></div>
+    </div>
+
+    <!-- TOOLS -->
+    <button class="tool-btn active" data-tool="pencil" title="Pencil (P)">✏️<span class="tool-label">pencil</span></button>
+    <button class="tool-btn" data-tool="fill" title="Fill (F)">🪣<span class="tool-label">fill</span></button>
+    <button class="tool-btn" data-tool="eraser" title="Eraser (E)">⬜<span class="tool-label">eraser</span></button>
+    <div class="tool-sep"></div>
+
+    <!-- SIZE stepper -->
+    <div class="stepper-wrap">
+      <span class="stepper-label">SIZE</span>
+      <span class="stepper-val" id="size-val">4</span>
+      <div class="stepper-row">
+        <button class="stepper-btn" id="size-dn">−</button>
+        <button class="stepper-btn" id="size-up">+</button>
+      </div>
+    </div>
+    <div class="tool-sep"></div>
+
+    <!-- OPACITY stepper -->
+    <div class="stepper-wrap">
+      <span class="stepper-label">OPACITY</span>
+      <span class="stepper-val" id="opacity-val">90%</span>
+      <div class="stepper-row">
+        <button class="stepper-btn" id="opacity-dn">−</button>
+        <button class="stepper-btn" id="opacity-up">+</button>
+      </div>
+    </div>
+    <div class="tool-sep"></div>
+
+    <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)">↩️<span class="tool-label">undo</span></button>
+    <button class="tool-btn" id="btn-redo" title="Redo (Ctrl+Y)">↪️<span class="tool-label">redo</span></button>
+    <div class="tool-sep"></div>
+    <button class="tool-btn" id="btn-clear" title="Clear frame">🗑️<span class="tool-label">clear</span></button>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-wrap">
+    <div id="canvas-container">
+      <canvas id="canvas-bg"></canvas>
+      <canvas id="canvas-roto"></canvas>
+      <canvas id="canvas-onion"></canvas>
+      <canvas id="canvas-draw"></canvas>
+      <canvas id="canvas-ui"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right-panel">
+
+    <!-- IMPORT — top priority, prominent -->
+    <div class="rpanel-section">
+      <div class="rpanel-title">Import</div>
+      <button class="import-btn" id="btn-import-video">📽 Video (Rotoscope)</button>
+      <button class="import-btn" id="btn-import-image">🖼 Background Image</button>
+      <button class="import-btn" id="btn-import-audio">🎵 Audio / Dialogue</button>
+      <div id="roto-status" style="font-size:9px;color:var(--paper-lines);margin-top:4px">No video or image loaded</div>
+    </div>
+
+    <!-- ROTO OPACITY -->
+    <div class="rpanel-section" id="roto-section">
+      <div class="rpanel-title">BG Layer</div>
+      <div class="roto-opacity-row">
+        <span>Opacity</span>
+        <div class="onion-stepper">
+          <button id="roto-op-dn">−</button>
+          <span id="roto-op-val">50%</span>
+          <button id="roto-op-up">+</button>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span>Lock BG</span>
+        <div class="toggle on" id="roto-lock-toggle"></div>
+      </div>
+    </div>
+
+    <!-- LAYERS -->
+    <div class="rpanel-section">
+      <div class="rpanel-title">Layers <button onclick="app.addLayer()">+ Add</button></div>
+      <div id="layer-list"></div>
+    </div>
+
+    <!-- COLOR -->
+    <div class="rpanel-section">
+      <div class="rpanel-title">Colour</div>
+      <div id="color-row">
+        <div id="current-color" style="background:#2a2520"></div>
+        <input type="text" id="color-hex" value="#2a2520" maxlength="7" spellcheck="false">
+      </div>
+      <div id="palette-grid"></div>
+      <button class="tl-btn" style="width:100%;margin-top:4px;padding:5px" onclick="app.addSwatch()">+ Save to palette</button>
+    </div>
+
+    <!-- ONION SKIN -->
+    <div class="rpanel-section">
+      <div class="rpanel-title">Onion Skin</div>
+      <div class="toggle-row">
+        <span>Enable</span>
+        <div class="toggle" id="onion-toggle"></div>
+      </div>
+      <div class="toggle-row">
+        <span>Prev</span>
+        <div class="onion-stepper">
+          <button id="onion-prev-dn">−</button>
+          <span id="onion-prev-val">2</span>
+          <button id="onion-prev-up">+</button>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span>Next</span>
+        <div class="onion-stepper">
+          <button id="onion-next-dn">−</button>
+          <span id="onion-next-val">1</span>
+          <button id="onion-next-up">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="rpanel-section">
+      <div class="rpanel-title">Export</div>
+      <button class="export-btn" onclick="app.exportGIF()">🎞 GIF</button>
+      <button class="export-btn" onclick="app.exportPNG()">🖼 PNG Sequence</button>
+      <button class="export-btn" onclick="app.exportWebM()">📹 WebM</button>
+    </div>
+
+  </div><!-- /right-panel -->
+</div><!-- /main -->
+
+<!-- BOTTOM TIMELINE -->
+<div id="bottom-panel">
+  <div id="timeline-header">
+    <button class="play-btn" id="btn-prev">◀</button>
+    <button class="play-btn" id="btn-play">▶</button>
+    <button class="play-btn" id="btn-next">▶</button>
+    <span id="frame-counter">01 / 24</span>
+    <button class="tl-btn" id="btn-add-frame">+ Frame</button>
+    <button class="tl-btn" id="btn-dup-frame">Dup</button>
+    <button class="tl-btn" id="btn-del-frame">Del</button>
+  </div>
+  <div id="dope-sheet">
+    <div id="layer-labels"></div>
+    <div id="timeline-scroll">
+      <div id="timeline-inner">
+        <div id="frame-ruler"></div>
+        <div id="dope-rows"></div>
+      </div>
+    </div>
+  </div>
+  <div id="waveform-row">
+    <div id="waveform-label">🎵 AUDIO</div>
+    <div id="waveform-canvas-wrap">
+      <canvas id="waveform-canvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script>
+'use strict';
+
+const PENCIL_COLORS = {
+  blue:  '#6ab0d4',
+  red:   '#d45a5a',
+  black: '#2a2520'
+};
+
+const app = {
+  W: 0, H: 0,
+  canvasBg:null, canvasRoto:null, canvasOnion:null, canvasDraw:null, canvasUI:null,
+  ctxBg:null, ctxRoto:null, ctxOnion:null, ctxDraw:null, ctxUI:null,
+
+  tool: 'pencil',
+  pencilColor: 'blue',
+  color: PENCIL_COLORS.blue,
+  brushSize: 4,
+  brushOpacity: 0.9,
+  drawing: false,
+  lastX: 0, lastY: 0,
+  points: [],
+
+  layers: [],
+  frames: [],
+  currentFrame: 0,
+  fps: 24,
+  playing: false,
+  playTimer: null,
+
+  onionEnabled: false,
+  onionPrev: 2,
+  onionNext: 1,
+
+  rotoFrames: [],
+  rotoOpacity: 0.5,
+  rotoLocked: true,
+  bgImageStatic: null,  // static bg image (non-video)
+
+  audioBuffer: null,
+  audioCtx: null,
+
+  undoStack: [],
+  redoStack: [],
+
+  dept: 'rough',
+  activeLayer: 2,
+  aspectRatio: '16:9',
+
+  palette: [
+    '#2a2520','#ffffff','#6ab0d4','#d45a5a','#c0392b','#e67e22',
+    '#f39c12','#2ecc71','#27ae60','#3498db','#9b59b6','#8e44ad',
+    '#f5f0e8','#8b6f47','#5a5550','#34495e'
+  ],
+
+  init() {
+    this.setupCanvases();
+    this.setupLayers();
+    this.setupFrames(24);
+    this.bindEvents();
+    this.renderLayerList();
+    this.renderPalette();
+    this.renderTimeline();
+    this.drawBg();
+    this.loadFrame();
+    this.updateDeptUI();
+    this.toast('Welcome to Flipbook Studio ✏️  —  Blue pencil active');
+  },
+
+  // ─── CANVAS ───
+  setupCanvases() {
+    const wrap = document.getElementById('canvas-wrap');
+    const W = wrap.clientWidth - 16;
+    const H = wrap.clientHeight - 16;
+    const [ar_w, ar_h] = this.getAR();
+    let cw = W, ch = Math.round(W * ar_h / ar_w);
+    if (ch > H) { ch = H; cw = Math.round(H * ar_w / ar_h); }
+    this.W = Math.max(cw, 100); this.H = Math.max(ch, 100);
+
+    const container = document.getElementById('canvas-container');
+    container.style.width = this.W + 'px';
+    container.style.height = this.H + 'px';
+
+    ['canvas-bg','canvas-roto','canvas-onion','canvas-draw','canvas-ui'].forEach(id => {
+      const c = document.getElementById(id);
+      c.width = this.W; c.height = this.H;
+      c.style.width = this.W + 'px'; c.style.height = this.H + 'px';
+    });
+
+    this.canvasBg   = document.getElementById('canvas-bg');
+    this.canvasRoto = document.getElementById('canvas-roto');
+    this.canvasOnion= document.getElementById('canvas-onion');
+    this.canvasDraw = document.getElementById('canvas-draw');
+    this.canvasUI   = document.getElementById('canvas-ui');
+    this.ctxBg   = this.canvasBg.getContext('2d');
+    this.ctxRoto = this.canvasRoto.getContext('2d');
+    this.ctxOnion= this.canvasOnion.getContext('2d');
+    this.ctxDraw = this.canvasDraw.getContext('2d');
+    this.ctxUI   = this.canvasUI.getContext('2d');
+
+    const ww = document.getElementById('waveform-canvas-wrap');
+    const wc = document.getElementById('waveform-canvas');
+    wc.width = Math.max(ww.clientWidth || 400, 400);
+    wc.height = 22;
+    wc.style.height = '22px';
+  },
+
+  getAR() {
+    return {'16:9':[16,9],'9:16':[9,16],'1:1':[1,1],'4:3':[4,3],'2.39:1':[239,100]}[this.aspectRatio]||[16,9];
+  },
+
+  // ─── LAYERS ───
+  setupLayers() {
+    this.layers = [
+      {id:'paint',  name:'Paint',  color:'#e74c3c', visible:true, locked:false},
+      {id:'ink',    name:'Ink',    color:'#1a1510', visible:true, locked:false},
+      {id:'rough',  name:'Rough',  color:'#6ab0d4', visible:true, locked:false},
+      {id:'bg',     name:'BG',     color:'#2ecc71', visible:true, locked:true},
+    ];
+    this.activeLayer = 2;
+  },
+
+  addLayer() {
+    const id = 'layer_' + Date.now();
+    this.layers.unshift({id, name:'Layer', color:'#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0'), visible:true, locked:false});
+    this.frames.forEach(f => { f[id] = null; });
+    this.activeLayer = 0;
+    this.renderLayerList();
+    this.renderTimeline();
+    this.toast('Layer added');
+  },
+
+  renderLayerList() {
+    const list = document.getElementById('layer-list');
+    list.innerHTML = '';
+    this.layers.forEach((l, i) => {
+      const row = document.createElement('div');
+      row.className = 'layer-row' + (i === this.activeLayer ? ' active' : '');
+      row.innerHTML = `<span class="layer-eye ${l.visible?'on':''}" data-i="${i}">👁</span><div class="layer-color" style="background:${l.color}"></div><span class="layer-name">${l.name}</span><span style="font-size:10px">${l.locked?'🔒':''}</span>`;
+      row.addEventListener('click', e => {
+        if (e.target.classList.contains('layer-eye')) { l.visible=!l.visible; this.renderLayerList(); this.loadFrame(); return; }
+        this.activeLayer = i;
+        this.renderLayerList();
+      });
+      list.appendChild(row);
+    });
+    this.renderDopeLabels();
+  },
+
+  // ─── FRAMES ───
+  setupFrames(count) {
+    this.frames = [];
+    for (let i = 0; i < count; i++) { const f={}; this.layers.forEach(l=>{f[l.id]=null;}); this.frames.push(f); }
+    this.rotoFrames = new Array(count).fill(null);
+    this.currentFrame = 0;
+  },
+
+  makeEmptyFrame() {
+    const f={}; this.layers.forEach(l=>{f[l.id]=null;}); return f;
+  },
+
+  loadFrame() {
+    this.ctxDraw.clearRect(0,0,this.W,this.H);
+    const f = this.frames[this.currentFrame];
+    if (!f) return;
+    [...this.layers].reverse().forEach(l => {
+      if (!l.visible) return;
+      const data = f[l.id];
+      if (data) {
+        const tmp = new OffscreenCanvas(this.W,this.H);
+        tmp.getContext('2d').putImageData(data,0,0);
+        this.ctxDraw.drawImage(tmp,0,0);
+      }
+    });
+    this.drawOnionSkin();
+    this.drawRotoFrame();
+    this.updateFrameCounter();
+    this.updateDopeHighlight();
+  },
+
+  saveActiveLayer() {
+    const l = this.layers[this.activeLayer];
+    if (!l || l.locked) return;
+    this.frames[this.currentFrame][l.id] = this.ctxDraw.getImageData(0,0,this.W,this.H);
+    this.updateDopeHighlight();
+    this.renderDopeCells();
+  },
+
+  gotoFrame(n) {
+    n = Math.max(0, Math.min(this.frames.length-1, n));
+    this.currentFrame = n;
+    this.loadFrame();
+    this.scrollTimelineToFrame(n);
+  },
+
+  addFrame() {
+    const f = this.makeEmptyFrame();
+    this.frames.splice(this.currentFrame+1, 0, f);
+    this.rotoFrames.splice(this.currentFrame+1, 0, null);
+    this.renderTimeline();
+    this.gotoFrame(this.currentFrame+1);
+    this.toast('Frame added');
+  },
+
+  dupFrame() {
+    const src = this.frames[this.currentFrame];
+    const f = {};
+    this.layers.forEach(l => { f[l.id] = src[l.id] ? new ImageData(new Uint8ClampedArray(src[l.id].data), src[l.id].width, src[l.id].height) : null; });
+    this.frames.splice(this.currentFrame+1,0,f);
+    this.rotoFrames.splice(this.currentFrame+1,0, this.rotoFrames[this.currentFrame]||null);
+    this.renderTimeline();
+    this.gotoFrame(this.currentFrame+1);
+    this.toast('Frame duplicated');
+  },
+
+  deleteFrame() {
+    if (this.frames.length<=1) { this.toast('Cannot delete last frame'); return; }
+    this.frames.splice(this.currentFrame,1);
+    this.rotoFrames.splice(this.currentFrame,1);
+    this.renderTimeline();
+    this.gotoFrame(Math.min(this.currentFrame, this.frames.length-1));
+    this.toast('Frame deleted');
+  },
+
+  updateFrameCounter() {
+    document.getElementById('frame-counter').textContent =
+      String(this.currentFrame+1).padStart(2,'0')+' / '+String(this.frames.length).padStart(2,'0');
+  },
+
+  // ─── DRAWING ───
+  getPos(e) {
+    const rect = this.canvasDraw.getBoundingClientRect();
+    const sx = this.W / rect.width, sy = this.H / rect.height;
+    let src = e.touches ? e.touches[0] : e;
+    return [(src.clientX - rect.left)*sx, (src.clientY - rect.top)*sy];
+  },
+
+  startDraw(e) {
+    e.preventDefault();
+    const l = this.layers[this.activeLayer];
+    if (!l || l.locked) { this.toast('Layer is locked'); return; }
+    if (this.tool === 'fill') { const [x,y]=this.getPos(e); this.floodFill(Math.round(x),Math.round(y)); return; }
+    this.drawing = true;
+    [this.lastX,this.lastY] = this.getPos(e);
+    this.points = [[this.lastX,this.lastY]];
+    this.pushUndo();
+    this.ctxDraw.save();
+    this.setDrawStyle();
+    this.ctxDraw.beginPath();
+    this.ctxDraw.arc(this.lastX,this.lastY,this.brushSize/2,0,Math.PI*2);
+    this.ctxDraw.fill();
+    this.ctxDraw.restore();
+  },
+
+  doDraw(e) {
+    e.preventDefault();
+    if (!this.drawing) return;
+    const [x,y] = this.getPos(e);
+    this.points.push([x,y]);
+    this.ctxDraw.save();
+    this.setDrawStyle();
+    if (this.tool==='eraser') { this.ctxDraw.globalCompositeOperation='destination-out'; this.ctxDraw.lineWidth=this.brushSize*2; }
+    const pts = this.points;
+    if (pts.length>=3) {
+      this.ctxDraw.beginPath();
+      this.ctxDraw.moveTo(pts[pts.length-3][0],pts[pts.length-3][1]);
+      const mx=(pts[pts.length-2][0]+pts[pts.length-1][0])/2;
+      const my=(pts[pts.length-2][1]+pts[pts.length-1][1])/2;
+      this.ctxDraw.quadraticCurveTo(pts[pts.length-2][0],pts[pts.length-2][1],mx,my);
+      this.ctxDraw.stroke();
+    }
+    this.ctxDraw.restore();
+    this.lastX=x; this.lastY=y;
+  },
+
+  endDraw(e) {
+    if (!this.drawing) return;
+    this.drawing = false;
+    this.saveActiveLayer();
+  },
+
+  setDrawStyle() {
+    const ctx = this.ctxDraw;
+    ctx.globalAlpha = this.brushOpacity;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = this.color;
+    ctx.fillStyle = this.color;
+    // Pencil tool: slightly textured, softer
+    if (this.tool === 'pencil') {
+      ctx.lineWidth = this.brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 0.8;
+    } else {
+      ctx.lineWidth = this.brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowBlur = 0;
+    }
+  },
+
+  // ─── FLOOD FILL ───
+  floodFill(startX, startY) {
+    if (startX<0||startX>=this.W||startY<0||startY>=this.H) return;
+    this.pushUndo();
+    const imageData = this.ctxDraw.getImageData(0,0,this.W,this.H);
+    const data = imageData.data;
+    const W = this.W;
+    const idx=(x,y)=>(y*W+x)*4;
+    const ti = idx(startX,startY);
+    const [tr,tg,tb,ta] = [data[ti],data[ti+1],data[ti+2],data[ti+3]];
+    const fc = this.hexToRGB(this.color);
+    if (fc.r===tr&&fc.g===tg&&fc.b===tb&&255===ta) return;
+    const tolerance = 40;
+    const match=i=>Math.abs(data[i]-tr)+Math.abs(data[i+1]-tg)+Math.abs(data[i+2]-tb)+Math.abs(data[i+3]-ta)<tolerance;
+    const stack=[[startX,startY]], visited=new Uint8Array(W*this.H);
+    while(stack.length) {
+      const [x,y]=stack.pop();
+      if(x<0||x>=W||y<0||y>=this.H) continue;
+      const vi=y*W+x;
+      if(visited[vi]) continue;
+      const i=vi*4;
+      if(!match(i)) continue;
+      visited[vi]=1;
+      data[i]=fc.r; data[i+1]=fc.g; data[i+2]=fc.b; data[i+3]=Math.round(this.brushOpacity*255);
+      stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+    }
+    this.ctxDraw.putImageData(imageData,0,0);
+    this.saveActiveLayer();
+    this.toast('Fill applied');
+  },
+
+  hexToRGB(hex) {
+    return {r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16)};
+  },
+
+  // ─── ONION SKIN ───
+  drawOnionSkin() {
+    this.ctxOnion.clearRect(0,0,this.W,this.H);
+    if (!this.onionEnabled) return;
+    const lid = this.layers[this.activeLayer]?.id;
+    const drawGhost=(fi, alpha, tint)=>{
+      if(fi<0||fi>=this.frames.length) return;
+      const data=this.frames[fi][lid];
+      if(!data) return;
+      const tmp=new OffscreenCanvas(this.W,this.H);
+      tmp.getContext('2d').putImageData(data,0,0);
+      this.ctxOnion.save();
+      this.ctxOnion.globalAlpha=alpha;
+      this.ctxOnion.drawImage(tmp,0,0);
+      this.ctxOnion.globalCompositeOperation='multiply';
+      this.ctxOnion.fillStyle=tint;
+      this.ctxOnion.fillRect(0,0,this.W,this.H);
+      this.ctxOnion.restore();
+    };
+    for(let i=this.onionPrev;i>=1;i--) drawGhost(this.currentFrame-i, 0.5/i, 'rgba(192,57,43,0.3)');
+    for(let i=1;i<=this.onionNext;i++) drawGhost(this.currentFrame+i, 0.5/i, 'rgba(41,128,185,0.3)');
+  },
+
+  // ─── BACKGROUND ───
+  drawBg() {
+    const ctx = this.ctxBg;
+    ctx.fillStyle = '#f5f0e8';
+    ctx.fillRect(0,0,this.W,this.H);
+    // Peg bar holes
+    [0.2,0.5,0.8].forEach(f=>{
+      const x=this.W*f;
+      ctx.beginPath(); ctx.arc(x,16,7,0,Math.PI*2);
+      ctx.fillStyle='#ddd5c0'; ctx.fill();
+      ctx.strokeStyle='#c0b89a'; ctx.lineWidth=1; ctx.stroke();
+    });
+    // Registration mark
+    const cx=this.W/2,cy=this.H/2;
+    ctx.strokeStyle='rgba(180,160,130,0.25)'; ctx.lineWidth=0.5;
+    [[cx-15,cy,cx+15,cy],[cx,cy-15,cx,cy+15]].forEach(([x1,y1,x2,y2])=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();});
+    ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.stroke();
+  },
+
+  // ─── ROTOSCOPE / VIDEO ───
+  async importVideo(file) {
+    this.toast('Importing video frames…');
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.src = url; video.muted = true;
+    await new Promise(r=>{video.onloadedmetadata=r;});
+    const dur = video.duration;
+    const frameCount = Math.min(Math.round(dur*this.fps), 200);
+    document.getElementById('load-bar').style.width='0%';
+    while(this.frames.length<frameCount) this.frames.push(this.makeEmptyFrame());
+    while(this.rotoFrames.length<frameCount) this.rotoFrames.push(null);
+    const tmp=document.createElement('canvas'); tmp.width=this.W; tmp.height=this.H;
+    const tc=tmp.getContext('2d');
+    for(let i=0;i<frameCount;i++) {
+      video.currentTime = i/this.fps;
+      await new Promise(r=>{video.onseeked=r;});
+      tc.clearRect(0,0,this.W,this.H);
+      tc.drawImage(video,0,0,this.W,this.H);
+      const img=new Image(); img.src=tmp.toDataURL();
+      await new Promise(r=>{img.onload=r;});
+      this.rotoFrames[i]=img;
+      document.getElementById('load-bar').style.width=Math.round((i+1)/frameCount*100)+'%';
+    }
+    URL.revokeObjectURL(url);
+    this.bgImageStatic = null;
+    document.getElementById('roto-status').textContent=`Video: ${frameCount} frames @ ${this.fps}fps`;
+    this.renderTimeline(); this.loadFrame();
+    this.toast(`✓ ${frameCount} frames imported`);
+    setTimeout(()=>{document.getElementById('load-bar').style.width='0%';},600);
+  },
+
+  // ─── STATIC BG IMAGE ───
+  importBGImage(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      this.bgImageStatic = img;
+      this.rotoFrames = this.rotoFrames.map(()=>img); // same image every frame
+      URL.revokeObjectURL(url);
+      document.getElementById('roto-status').textContent = 'BG image: ' + file.name;
+      this.loadFrame(); this.drawRotoFrame();
+      this.toast('Background image loaded');
+    };
+    img.src = url;
+  },
+
+  drawRotoFrame() {
+    this.ctxRoto.clearRect(0,0,this.W,this.H);
+    const img = this.rotoFrames[this.currentFrame] || this.bgImageStatic;
+    if (!img) return;
+    this.ctxRoto.globalAlpha = this.rotoOpacity;
+    this.ctxRoto.drawImage(img,0,0,this.W,this.H);
+    this.ctxRoto.globalAlpha = 1;
+  },
+
+  // ─── AUDIO ───
+  async importAudio(file) {
+    this.toast('Analysing audio…');
+    this.audioCtx = this.audioCtx || new AudioContext();
+    const ab = await file.arrayBuffer();
+    this.audioBuffer = await this.audioCtx.decodeAudioData(ab);
+    this.buildWaveform();
+    this.toast('Audio loaded ✓');
+  },
+
+  buildWaveform() {
+    if (!this.audioBuffer) return;
+    const canvas=document.getElementById('waveform-canvas');
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height;
+    const data=this.audioBuffer.getChannelData(0);
+    const step=Math.floor(data.length/W);
+    ctx.fillStyle='#2c2420'; ctx.fillRect(0,0,W,H);
+    for(let i=0;i<W;i++){
+      let max=0;
+      for(let j=0;j<step;j++){const v=Math.abs(data[i*step+j]||0); if(v>max)max=v;}
+      const h=Math.round(max*(H-2));
+      ctx.fillStyle=`rgba(41,128,185,${0.4+max*0.6})`;
+      ctx.fillRect(i,H/2-h/2,1,h||1);
+    }
+    // frame ticks
+    ctx.strokeStyle='rgba(139,111,71,0.4)'; ctx.lineWidth=1;
+    for(let i=0;i<this.frames.length;i++){
+      const x=Math.round((i/this.frames.length)*W);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+  },
+
+  // ─── PLAYBACK ───
+  togglePlay() {
+    this.playing = !this.playing;
+    const btn=document.getElementById('btn-play');
+    if(this.playing){ btn.textContent='⏸'; btn.classList.add('playing'); this.playLoop(); }
+    else { btn.textContent='▶'; btn.classList.remove('playing'); clearTimeout(this.playTimer); }
+  },
+  playLoop() {
+    if(!this.playing) return;
+    this.gotoFrame((this.currentFrame+1)%this.frames.length);
+    this.playTimer=setTimeout(()=>this.playLoop(), 1000/this.fps);
+  },
+
+  // ─── PALETTE ───
+  renderPalette() {
+    const grid=document.getElementById('palette-grid');
+    grid.innerHTML='';
+    this.palette.forEach(c=>{
+      const sw=document.createElement('div');
+      sw.className='swatch'+(c===this.color?' active':'');
+      sw.style.background=c; sw.title=c;
+      sw.addEventListener('click',()=>this.setColor(c));
+      grid.appendChild(sw);
+    });
+  },
+  setColor(c) {
+    this.color=c;
+    document.getElementById('current-color').style.background=c;
+    document.getElementById('color-hex').value=c;
+    this.renderPalette();
+    // If in rough dept, update pencil-color-btn state
+    if(this.dept==='rough') {
+      document.querySelectorAll('.pencil-color-btn').forEach(b=>{
+        const pc=PENCIL_COLORS[b.dataset.pencil];
+        b.classList.toggle('active', pc===c);
+      });
+    }
+  },
+  addSwatch() { if(!this.palette.includes(this.color)){this.palette.push(this.color);this.renderPalette();} },
+
+  // ─── TIMELINE ───
+  renderTimeline() { this.renderDopeLabels(); this.renderFrameRuler(); this.renderDopeRows(); },
+  renderDopeLabels() {
+    const labels=document.getElementById('layer-labels');
+    labels.innerHTML='<div class="ds-layer-label" style="height:18px"></div>';
+    this.layers.forEach(l=>{
+      const div=document.createElement('div');
+      div.className='ds-layer-label';
+      div.innerHTML=`<div class="ds-layer-dot" style="background:${l.color}"></div><span>${l.name}</span>`;
+      labels.appendChild(div);
+    });
+  },
+  renderFrameRuler() {
+    const ruler=document.getElementById('frame-ruler'); ruler.innerHTML='';
+    this.frames.forEach((_,i)=>{
+      const t=document.createElement('div');
+      t.className='frame-tick'+(i===this.currentFrame?' current':'');
+      t.textContent=(i+1)%5===0?(i+1):(i===0?'1':'·');
+      t.dataset.frame=i;
+      t.addEventListener('click',()=>this.gotoFrame(i));
+      ruler.appendChild(t);
+    });
+  },
+  renderDopeRows() {
+    const rows=document.getElementById('dope-rows'); rows.innerHTML='';
+    this.layers.forEach(l=>{
+      const row=document.createElement('div'); row.className='dope-row';
+      this.frames.forEach((f,fi)=>{
+        const cell=document.createElement('div');
+        cell.className='dope-cell'+(fi===this.currentFrame?' current':'')+(f[l.id]?' has-key':'');
+        cell.dataset.frame=fi;
+        cell.addEventListener('click',()=>this.gotoFrame(fi));
+        row.appendChild(cell);
+      });
+      rows.appendChild(row);
+    });
+  },
+  renderDopeCells() {
+    document.querySelectorAll('.dope-row').forEach((row,li)=>{
+      const l=this.layers[li];
+      if(!l) return;
+      row.querySelectorAll('.dope-cell').forEach((cell,fi)=>{
+        cell.classList.toggle('has-key', !!this.frames[fi]?.[l.id]);
+      });
+    });
+  },
+  updateDopeHighlight() {
+    document.querySelectorAll('.frame-tick').forEach((t,i)=>t.classList.toggle('current',i===this.currentFrame));
+    document.querySelectorAll('.dope-row').forEach(row=>row.querySelectorAll('.dope-cell').forEach((cell,i)=>cell.classList.toggle('current',i===this.currentFrame)));
+  },
+  scrollTimelineToFrame(n) {
+    const s=document.getElementById('timeline-scroll');
+    s.scrollLeft=Math.max(0,n*22-s.clientWidth/2);
+  },
+
+  // ─── UNDO / REDO ───
+  pushUndo() {
+    const l=this.layers[this.activeLayer]; if(!l) return;
+    const data=this.frames[this.currentFrame][l.id];
+    this.undoStack.push({frame:this.currentFrame, lid:l.id, data:data?new ImageData(new Uint8ClampedArray(data.data),data.width,data.height):null});
+    if(this.undoStack.length>30) this.undoStack.shift();
+    this.redoStack=[];
+  },
+  undo() {
+    if(!this.undoStack.length) return;
+    const s=this.undoStack.pop();
+    const cur=this.frames[s.frame][s.lid];
+    this.redoStack.push({...s,data:cur});
+    this.frames[s.frame][s.lid]=s.data;
+    if(s.frame===this.currentFrame) this.loadFrame();
+    this.toast('Undo');
+  },
+  redo() {
+    if(!this.redoStack.length) return;
+    const s=this.redoStack.pop();
+    this.undoStack.push({...s,data:this.frames[s.frame][s.lid]});
+    this.frames[s.frame][s.lid]=s.data;
+    if(s.frame===this.currentFrame) this.loadFrame();
+    this.toast('Redo');
+  },
+
+  // ─── DEPT ───
+  setDept(dept) {
+    this.dept=dept;
+    document.querySelectorAll('.dept-btn').forEach(b=>b.classList.toggle('active',b.dataset.dept===dept));
+    this.updateDeptUI();
+    const lmap={rough:2,ink:1,paint:0};
+    if(lmap[dept]!==undefined && lmap[dept]<this.layers.length) this.activeLayer=lmap[dept];
+    if(dept==='paint') { this.tool='fill'; }
+    else if(dept==='ink') { this.tool='pencil'; this.color='#1a1510'; this.setColor('#1a1510'); }
+    else { this.tool='pencil'; this.setPencilColor(this.pencilColor); }
+    this.updateToolUI();
+    this.renderLayerList();
+    this.toast(dept.charAt(0).toUpperCase()+dept.slice(1)+' dept');
+  },
+  updateDeptUI() {
+    const roughPencils=document.getElementById('rough-pencils');
+    roughPencils.style.display=this.dept==='rough'?'flex':'none';
+    roughPencils.style.flexDirection='column';
+    roughPencils.style.alignItems='center';
+    roughPencils.style.gap='3px';
+  },
+  setPencilColor(name) {
+    this.pencilColor=name;
+    this.color=PENCIL_COLORS[name]||PENCIL_COLORS.blue;
+    document.getElementById('current-color').style.background=this.color;
+    document.getElementById('color-hex').value=this.color;
+    document.querySelectorAll('.pencil-color-btn').forEach(b=>b.classList.toggle('active',b.dataset.pencil===name));
+    this.renderPalette();
+  },
+  updateToolUI() {
+    document.querySelectorAll('.tool-btn[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===this.tool));
+    document.body.classList.toggle('fill-mode',this.tool==='fill');
+  },
+
+  // ─── EXPORT ───
+  async exportGIF() {
+    if(typeof GIF==='undefined'){this.toast('GIF library not loaded');return;}
+    this.toast('Generating GIF…');
+    const gif=new GIF({workers:2,quality:10,width:this.W,height:this.H});
+    const delay=Math.round(1000/this.fps);
+    const tmp=document.createElement('canvas'); tmp.width=this.W; tmp.height=this.H;
+    const tc=tmp.getContext('2d');
+    for(let i=0;i<this.frames.length;i++){
+      tc.fillStyle='#f5f0e8'; tc.fillRect(0,0,this.W,this.H);
+      const f=this.frames[i];
+      const roto=this.rotoFrames[i]||this.bgImageStatic;
+      if(roto){tc.save();tc.globalAlpha=this.rotoOpacity;tc.drawImage(roto,0,0,this.W,this.H);tc.restore();}
+      [...this.layers].reverse().forEach(l=>{if(!l.visible)return;const d=f[l.id];if(d){const ot=new OffscreenCanvas(this.W,this.H);ot.getContext('2d').putImageData(d,0,0);tc.drawImage(ot,0,0);}});
+      gif.addFrame(tc,{delay,copy:true});
+    }
+    gif.on('finished',blob=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flipbook.gif';a.click();this.toast('GIF exported!');});
+    gif.render();
+  },
+  async exportPNG() {
+    this.toast('Exporting frames…');
+    const tmp=document.createElement('canvas'); tmp.width=this.W; tmp.height=this.H;
+    const tc=tmp.getContext('2d');
+    for(let i=0;i<this.frames.length;i++){
+      tc.fillStyle='#f5f0e8'; tc.fillRect(0,0,this.W,this.H);
+      const roto=this.rotoFrames[i]||this.bgImageStatic;
+      if(roto){tc.save();tc.globalAlpha=this.rotoOpacity;tc.drawImage(roto,0,0,this.W,this.H);tc.restore();}
+      [...this.layers].reverse().forEach(l=>{if(!l.visible)return;const d=this.frames[i][l.id];if(d){const ot=new OffscreenCanvas(this.W,this.H);ot.getContext('2d').putImageData(d,0,0);tc.drawImage(ot,0,0);}});
+      const a=document.createElement('a');a.href=tmp.toDataURL('image/png');a.download=`frame_${String(i+1).padStart(4,'0')}.png`;a.click();
+      await new Promise(r=>setTimeout(r,80));
+    }
+    this.toast('PNG sequence exported!');
+  },
+  exportWebM() {
+    this.toast('Recording WebM…');
+    const tmp=document.createElement('canvas'); tmp.width=this.W; tmp.height=this.H;
+    const tc=tmp.getContext('2d');
+    const stream=tmp.captureStream(this.fps);
+    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'});
+    const chunks=[];
+    recorder.ondataavailable=e=>chunks.push(e.data);
+    recorder.onstop=()=>{const blob=new Blob(chunks,{type:'video/webm'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='flipbook.webm';a.click();this.toast('WebM exported!');};
+    recorder.start();
+    let fi=0;
+    const draw=()=>{
+      if(fi>=this.frames.length){recorder.stop();return;}
+      tc.fillStyle='#f5f0e8'; tc.fillRect(0,0,this.W,this.H);
+      const roto=this.rotoFrames[fi]||this.bgImageStatic;
+      if(roto){tc.save();tc.globalAlpha=this.rotoOpacity;tc.drawImage(roto,0,0,this.W,this.H);tc.restore();}
+      [...this.layers].reverse().forEach(l=>{if(!l.visible)return;const d=this.frames[fi][l.id];if(d){const ot=new OffscreenCanvas(this.W,this.H);ot.getContext('2d').putImageData(d,0,0);tc.drawImage(ot,0,0);}});
+      fi++; setTimeout(draw,1000/this.fps);
+    };
+    draw();
+  },
+
+  // ─── TOAST ───
+  toast(msg) {
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(this._tt);
+    this._tt=setTimeout(()=>t.classList.remove('show'),2200);
+  },
+
+  // ─── EVENTS ───
+  bindEvents() {
+    const dc=this.canvasDraw;
+    dc.addEventListener('pointerdown',e=>this.startDraw(e),{passive:false});
+    dc.addEventListener('pointermove',e=>this.doDraw(e),{passive:false});
+    dc.addEventListener('pointerup',e=>this.endDraw(e));
+    dc.addEventListener('pointerleave',e=>this.endDraw(e));
+    dc.addEventListener('touchstart',e=>this.startDraw(e),{passive:false});
+    dc.addEventListener('touchmove',e=>this.doDraw(e),{passive:false});
+    dc.addEventListener('touchend',e=>this.endDraw(e));
+
+    // Pencil colour buttons
+    document.querySelectorAll('.pencil-color-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>this.setPencilColor(btn.dataset.pencil));
+    });
+
+    // Tools
+    document.querySelectorAll('.tool-btn[data-tool]').forEach(btn=>{
+      btn.addEventListener('click',()=>{this.tool=btn.dataset.tool;this.updateToolUI();});
+    });
+
+    // Size stepper
+    const sizeVal=document.getElementById('size-val');
+    document.getElementById('size-up').addEventListener('click',()=>{this.brushSize=Math.min(80,this.brushSize+1);sizeVal.textContent=this.brushSize;});
+    document.getElementById('size-dn').addEventListener('click',()=>{this.brushSize=Math.max(1,this.brushSize-1);sizeVal.textContent=this.brushSize;});
+
+    // Opacity stepper
+    const opVal=document.getElementById('opacity-val');
+    document.getElementById('opacity-up').addEventListener('click',()=>{this.brushOpacity=Math.min(1,+(this.brushOpacity+0.05).toFixed(2));opVal.textContent=Math.round(this.brushOpacity*100)+'%';});
+    document.getElementById('opacity-dn').addEventListener('click',()=>{this.brushOpacity=Math.max(0.05,+(this.brushOpacity-0.05).toFixed(2));opVal.textContent=Math.round(this.brushOpacity*100)+'%';});
+
+    // Undo/redo/clear
+    document.getElementById('btn-undo').addEventListener('click',()=>this.undo());
+    document.getElementById('btn-redo').addEventListener('click',()=>this.redo());
+    document.getElementById('btn-clear').addEventListener('click',()=>{this.pushUndo();this.ctxDraw.clearRect(0,0,this.W,this.H);this.saveActiveLayer();this.toast('Frame cleared');});
+
+    // Timeline
+    document.getElementById('btn-play').addEventListener('click',()=>this.togglePlay());
+    document.getElementById('btn-prev').addEventListener('click',()=>this.gotoFrame(this.currentFrame-1));
+    document.getElementById('btn-next').addEventListener('click',()=>this.gotoFrame(this.currentFrame+1));
+    document.getElementById('btn-add-frame').addEventListener('click',()=>this.addFrame());
+    document.getElementById('btn-dup-frame').addEventListener('click',()=>this.dupFrame());
+    document.getElementById('btn-del-frame').addEventListener('click',()=>this.deleteFrame());
+    document.getElementById('fps-select').addEventListener('change',e=>{this.fps=parseInt(e.target.value);});
+
+    // Dept
+    document.querySelectorAll('.dept-btn').forEach(btn=>btn.addEventListener('click',()=>this.setDept(btn.dataset.dept)));
+
+    // Onion skin
+    document.getElementById('onion-toggle').addEventListener('click',()=>{
+      this.onionEnabled=!this.onionEnabled;
+      document.getElementById('onion-toggle').classList.toggle('on',this.onionEnabled);
+      this.loadFrame();
+    });
+    const mkOnionStepper=(dnId,upId,valId,get,set,min,max)=>{
+      const upd=()=>{document.getElementById(valId).textContent=get();this.loadFrame();};
+      document.getElementById(dnId).addEventListener('click',()=>{set(Math.max(min,get()-1));upd();});
+      document.getElementById(upId).addEventListener('click',()=>{set(Math.min(max,get()+1));upd();});
+    };
+    mkOnionStepper('onion-prev-dn','onion-prev-up','onion-prev-val',()=>this.onionPrev,v=>{this.onionPrev=v;},0,8);
+    mkOnionStepper('onion-next-dn','onion-next-up','onion-next-val',()=>this.onionNext,v=>{this.onionNext=v;},0,4);
+
+    // Roto opacity stepper
+    document.getElementById('roto-op-dn').addEventListener('click',()=>{
+      this.rotoOpacity=Math.max(0,+(this.rotoOpacity-0.1).toFixed(1));
+      document.getElementById('roto-op-val').textContent=Math.round(this.rotoOpacity*100)+'%';
+      this.drawRotoFrame();
+    });
+    document.getElementById('roto-op-up').addEventListener('click',()=>{
+      this.rotoOpacity=Math.min(1,+(this.rotoOpacity+0.1).toFixed(1));
+      document.getElementById('roto-op-val').textContent=Math.round(this.rotoOpacity*100)+'%';
+      this.drawRotoFrame();
+    });
+
+    // Roto lock
+    document.getElementById('roto-lock-toggle').addEventListener('click',()=>{
+      this.rotoLocked=!this.rotoLocked;
+      document.getElementById('roto-lock-toggle').classList.toggle('on',this.rotoLocked);
+      const bgL=this.layers.find(l=>l.id==='bg');
+      if(bgL) bgL.locked=this.rotoLocked;
+      this.renderLayerList();
+    });
+
+    // Import sheet (always-visible on mobile)
+    const sheet = document.getElementById('import-sheet');
+    const sheetBd = document.getElementById('sheet-backdrop');
+    const openSheet = () => { sheet.classList.add('open'); sheetBd.classList.add('show'); };
+    const closeSheet = () => { sheet.classList.remove('open'); sheetBd.classList.remove('show'); };
+    document.getElementById('btn-import-sheet').addEventListener('click', openSheet);
+    document.getElementById('import-sheet-close').addEventListener('click', closeSheet);
+    sheetBd.addEventListener('click', closeSheet);
+    document.getElementById('sheet-btn-video').addEventListener('click', () => { closeSheet(); document.getElementById('file-video').click(); });
+    document.getElementById('sheet-btn-image').addEventListener('click', () => { closeSheet(); document.getElementById('file-image').click(); });
+    document.getElementById('sheet-btn-audio').addEventListener('click', () => { closeSheet(); document.getElementById('file-audio').click(); });
+
+    // Panel drawer toggle (mobile)
+    const panel = document.getElementById('right-panel');
+    const panelBd = document.getElementById('panel-backdrop');
+    const closePanel = () => { panel.classList.remove('open'); panelBd.classList.remove('show'); };
+    document.getElementById('btn-panel-toggle').addEventListener('click', () => {
+      const isOpen = panel.classList.toggle('open');
+      panelBd.classList.toggle('show', isOpen);
+    });
+    panelBd.addEventListener('click', closePanel);
+
+    // Import buttons (inside right panel — still works on desktop)
+    document.getElementById('btn-import-video').addEventListener('click',()=>document.getElementById('file-video').click());
+    document.getElementById('btn-import-image').addEventListener('click',()=>document.getElementById('file-image').click());
+    document.getElementById('btn-import-audio').addEventListener('click',()=>document.getElementById('file-audio').click());
+    document.getElementById('file-video').addEventListener('change',e=>{if(e.target.files[0])this.importVideo(e.target.files[0]);});
+    document.getElementById('file-image').addEventListener('change',e=>{if(e.target.files[0])this.importBGImage(e.target.files[0]);});
+    document.getElementById('file-audio').addEventListener('change',e=>{if(e.target.files[0])this.importAudio(e.target.files[0]);});
+
+    // Colour
+    document.getElementById('current-color').addEventListener('click',()=>document.getElementById('color-picker').click());
+    document.getElementById('color-picker').addEventListener('input',e=>this.setColor(e.target.value));
+    document.getElementById('color-hex').addEventListener('change',e=>{const v=e.target.value.trim();if(/^#[0-9a-fA-F]{6}$/.test(v))this.setColor(v);});
+
+    // Aspect ratio
+    document.getElementById('ar-select').addEventListener('change',e=>{this.aspectRatio=e.target.value;this.setupCanvases();this.drawBg();this.loadFrame();});
+
+    // Drag & drop
+    document.body.addEventListener('dragover',e=>{e.preventDefault();document.getElementById('drop-overlay').classList.add('show');});
+    document.body.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.getElementById('drop-overlay').classList.remove('show');});
+    document.body.addEventListener('drop',e=>{
+      e.preventDefault();document.getElementById('drop-overlay').classList.remove('show');
+      const file=e.dataTransfer.files[0]; if(!file) return;
+      if(file.type.startsWith('video/'))this.importVideo(file);
+      else if(file.type.startsWith('image/'))this.importBGImage(file);
+      else if(file.type.startsWith('audio/'))this.importAudio(file);
+    });
+
+    // Keyboard
+    document.addEventListener('keydown',e=>{
+      if(e.target.tagName==='INPUT') return;
+      if(e.ctrlKey||e.metaKey){if(e.key==='z'){e.preventDefault();e.shiftKey?this.redo():this.undo();}return;}
+      const tm={p:'pencil',f:'fill',e:'eraser'};
+      if(tm[e.key]){this.tool=tm[e.key];this.updateToolUI();}
+      if(e.key==='1')this.setPencilColor('blue');
+      if(e.key==='2')this.setPencilColor('red');
+      if(e.key==='3')this.setPencilColor('black');
+      if(e.key==='ArrowLeft'){e.preventDefault();this.gotoFrame(this.currentFrame-1);}
+      if(e.key==='ArrowRight'){e.preventDefault();this.gotoFrame(this.currentFrame+1);}
+      if(e.key===' '){e.preventDefault();this.togglePlay();}
+    });
+
+    window.addEventListener('resize',()=>{this.setupCanvases();this.drawBg();this.loadFrame();});
+  }
+};
+
+window.addEventListener('DOMContentLoaded',()=>app.init());
+</script>
+</body>
+</html>
